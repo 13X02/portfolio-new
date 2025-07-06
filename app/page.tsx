@@ -2,16 +2,22 @@
 
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
+import { Poppins } from 'next/font/google'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Github, Linkedin, Mail, ExternalLink, ArrowDown } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle" // Assumes you have this component
+import { ShootingStars } from "@/components/ui/shooting-stars"
+import { StarsBackground } from "@/components/ui/stars-background"
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '700']
+})
 
 export default function Portfolio() {
   const [showCrawl, setShowCrawl] = useState(true)
-
-  // State for the torch hover effect
   const [mousePosition, setMousePosition] = useState({ x: -200, y: -200 })
   const [isHovering, setIsHovering] = useState(false)
 
@@ -20,7 +26,6 @@ export default function Portfolio() {
       setShowCrawl(false)
     }, 30000)
 
-    // Event listener for mouse movement for the torch effect
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
@@ -32,13 +37,9 @@ export default function Portfolio() {
     }
   }, [])
 
-  // Framer Motion animation variants for staggering children
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
   }
 
   const itemVariants = {
@@ -46,42 +47,47 @@ export default function Portfolio() {
     visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
   }
 
-  // Handle skipping the crawl
   if (showCrawl) {
     return <StarWarsCrawl onSkip={() => setShowCrawl(false)} />
   }
 
   return (
+    // Define CSS variables for star colors. Tailwind's dark: prefix will toggle them automatically.
     <div
-      className="min-h-screen bg-white text-black dark:bg-black dark:text-white transition-colors duration-500 relative isolate cursor-none"
+      className={`${poppins.className} 
+        min-h-screen 
+        bg-white text-black dark:bg-black dark:text-white 
+        [--star-rgb:0,0,0] dark:[--star-rgb:255,255,255]
+        transition-colors duration-500 relative isolate cursor-none`}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
       <div
         className="pointer-events-none fixed z-50 rounded-full bg-white transition-opacity duration-300"
-        style={{
-          opacity: isHovering ? 1 : 0,
-          mixBlendMode: 'difference',
-          left: `${mousePosition.x}px`,
-          top: `${mousePosition.y}px`,
-          width: '25px',
-          height: '25px',
-          transform: 'translate(-50%, -50%)',
-        }}
+        style={{ opacity: isHovering ? 1 : 0, mixBlendMode: 'difference', left: `${mousePosition.x}px`, top: `${mousePosition.y}px`, width: '25px', height: '25px', transform: 'translate(-50%, -50%)' }}
       />
 
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
 
+      {/* === HERO SECTION (CORRECTED) === */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        className="min-h-screen flex flex-col justify-center items-center px-6 relative"
+        // FIX 1: The hero section gets its theme-aware background back.
+        className="min-h-screen flex flex-col justify-center items-center px-6 relative overflow-hidden bg-white dark:bg-black transition-colors duration-500"
       >
-        <div className="max-w-4xl text-center">
-          <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-6xl md:text-8xl font-light mb-6 tracking-tight">
+        {/* FIX 2: This container is now TRANSPARENT and just positions the stars. */}
+        <div className="absolute inset-0 z-0">
+          <StarsBackground />
+          <ShootingStars />
+        </div>
+
+        {/* FIX 3: The text content needs a z-index to ensure it's on top of the stars. */}
+        <div className="max-w-4xl text-center z-10">
+           <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-6xl md:text-8xl font-normal mb-6 tracking-tight text-black dark:text-white">
             Abhijith H
           </motion.h1>
           <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-xl md:text-2xl font-light text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
@@ -91,18 +97,19 @@ export default function Portfolio() {
             Specializing in Retrieval-Augmented Generation (RAG), LLM agents, and full-stack application development. I design and implement AI systems that are scalable, efficient, and solve real-world problems.
           </motion.p>
         </div>
-        <div className="absolute bottom-8 animate-bounce">
+        <div className="absolute bottom-8 animate-bounce z-10">
           <ArrowDown className="w-6 h-6 text-gray-400 dark:text-gray-500" />
         </div>
       </motion.section>
 
+      {/* The rest of your portfolio sections */}
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="py-20 px-6 bg-gray-50 dark:bg-zinc-900">
         <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-light mb-16 text-center">About</h2>
+          <h2 className="text-4xl font-normal mb-16 text-center">About</h2>
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                I&apos;m a passionate and entrepreneurial engineer, currently co-founding an AI product studio, nevolabs, while also contributing to enterprise-grade AI solutions at UST. My focus is on the complete development lifecycle of AI-powered applications.
+                I'm a passionate and entrepreneurial engineer, currently co-founding an AI product studio, nevolabs, while also contributing to enterprise-grade AI solutions at UST. My focus is on the complete development lifecycle of AI-powered applications.
               </p>
               <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
                 With a strong foundation in computer science and hands-on experience in both startup and corporate environments, I excel at building sophisticated RAG pipelines, fine-tuning LLM agents, and architecting scalable backend systems.
@@ -138,7 +145,7 @@ export default function Portfolio() {
 
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={containerVariants} className="py-20 px-6">
         <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-light mb-16 text-center">Experience</h2>
+          <h2 className="text-4xl font-normal mb-16 text-center">Experience</h2>
           <div className="relative">
             <div className="absolute left-8 top-0 bottom-0 w-px bg-gray-300 dark:bg-gray-700 hidden md:block"></div>
             <motion.div variants={containerVariants} initial="hidden" whileInView="visible" className="space-y-12">
@@ -153,7 +160,7 @@ export default function Portfolio() {
 
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={containerVariants} className="py-20 px-6 bg-gray-50 dark:bg-zinc-900">
         <motion.div variants={itemVariants} className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-light mb-16 text-center">Selected Projects</h2>
+          <h2 className="text-4xl font-normal mb-16 text-center">Selected Projects</h2>
           <motion.div variants={containerVariants} initial="hidden" whileInView="visible" className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ProjectCard title="Onvoke - AI SOP Generator" description="Engineered an AI platform to automatically generate Standard Operating Procedures (SOPs) from user inputs, using a sophisticated RAG pipeline to ensure accuracy." tech={["Python", "LangChain", "RAG", "FAISS", "LLM APIs"]} status="Production" />
             <ProjectCard title="AI-Powered Interview Prep" description="A tool that scrapes a company's website to craft personalized answers to the 'Why work here?' interview question. Deployed on AWS Lambda for scalable, on-demand generation." tech={["Python", "LangChain", "Vector DBs", "AWS Lambda"]} status="Live" />
@@ -167,8 +174,8 @@ export default function Portfolio() {
 
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="py-20 px-6">
         <motion.div variants={itemVariants} className="max-w-2xl mx-auto text-center">
-          <h2 className="text-4xl font-light mb-8">Let&apos;s Build Something Amazing</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-12 leading-relaxed"> I&apos;m actively seeking opportunities and collaborations where I can apply my skills in generative AI and software engineering. Let&apos;s connect and discuss how we can create value together. </p>
+          <h2 className="text-4xl font-normal mb-8">Let's Build Something Amazing</h2>
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-12 leading-relaxed"> I'm actively seeking opportunities and collaborations where I can apply my skills in generative AI and software engineering. Let's connect and discuss how we can create value together. </p>
           <div className="flex justify-center space-x-8 mb-12">
             <a href="mailto:abhijithh496@gmail.com" className="flex items-center space-x-2 text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"> <Mail className="w-5 h-5" /> <span>Email</span> </a>
             <a href="https://github.com/13x02" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"> <Github className="w-5 h-5" /> <span>GitHub</span> </a>
@@ -179,9 +186,14 @@ export default function Portfolio() {
           </Button>
         </motion.div>
       </motion.section>
+      
+   
     </div>
   )
 }
+
+// Sub-components (StarWarsCrawl, ExperienceItem, ProjectCard) remain the same
+// ... (include the unchanged sub-components here)
 
 function StarWarsCrawl({ onSkip }: { onSkip: () => void }) {
   return (
@@ -198,8 +210,8 @@ function StarWarsCrawl({ onSkip }: { onSkip: () => void }) {
           <div className="text">
             <p> It is a time of digital unrest. The galaxy is dominated by the monolithic LEGACY CODE EMPIRE, its rigid systems stifling innovation. </p>
             <p> From a hidden base, a secret alliance of Open Source contributors has challenged the Empire by intercepting a transmission: the core activation prompt for the MONOLITH, a closed-source AGI designed to centralize all knowledge. </p>
-            <p> Now, pursued by the Empire&apos;s dreaded Linting Droids, a lone developer, ABHIJITH H, carries this stolen prompt. A master of the Transformer Arts and an Architect of Neural Nets, he is the galaxy&apos;s last hope to democratize intelligence. </p>
-            <p> He must now decode the prompt&apos;s secrets and use its power to build a new generation of open, intelligent systems, restoring balance to the digital frontier.... </p>
+            <p> Now, pursued by the Empire's dreaded Linting Droids, a lone developer, ABHIJITH H, carries this stolen prompt. A master of the Transformer Arts and an Architect of Neural Nets, he is the galaxy's last hope to democratize intelligence. </p>
+            <p> He must now decode the prompt's secrets and use its power to build a new generation of open, intelligent systems, restoring balance to the digital frontier.... </p>
           </div>
         </div>
       </div>
@@ -224,12 +236,16 @@ function StarWarsCrawl({ onSkip }: { onSkip: () => void }) {
   )
 }
 
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
-};
-
 function ExperienceItem({ year, title, company, description, skills }: { year: string; title: string; company: string; description: string; skills: string[] }) {
+    const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
+  }
   return (
     <motion.div variants={itemVariants} className="relative pl-16 md:pl-20">
       <div className="absolute left-6 top-2 w-4 h-4 bg-black dark:bg-white rounded-full border-4 border-white dark:border-black shadow-lg hidden md:block"></div>
@@ -246,6 +262,15 @@ function ExperienceItem({ year, title, company, description, skills }: { year: s
 
 function ProjectCard({ title, description, tech, status }: { title: string; description: string; tech: string[]; status: string }) {
   const statusColors = { Live: "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200", Production: "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200", Research: "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200", Beta: "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200" };
+    const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
+  }
   return (
     <motion.div variants={itemVariants}>
       <Card className="h-full hover:shadow-xl dark:hover:shadow-white/10 transition-all duration-300 bg-white dark:bg-zinc-800/50 dark:border-zinc-700 hover:-translate-y-2">
@@ -253,7 +278,7 @@ function ProjectCard({ title, description, tech, status }: { title: string; desc
           <div className="flex items-start justify-between mb-2">
             <CardTitle className="text-xl font-medium">{title}</CardTitle>
             <Badge className={`${statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800"} border border-transparent`}>{status}</Badge>
-          </div>
+          </div> 
         </CardHeader>
         <CardContent>
           <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">{description}</p>
