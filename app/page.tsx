@@ -102,7 +102,7 @@ export default function Portfolio() {
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
               <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                I'm a passionate and entrepreneurial engineer, currently co-founding an AI product studio, nevolabs, while also contributing to enterprise-grade AI solutions at UST. My focus is on the complete development lifecycle of AI-powered applications.
+                I&apos;m a passionate and entrepreneurial engineer, currently co-founding an AI product studio, nevolabs, while also contributing to enterprise-grade AI solutions at UST. My focus is on the complete development lifecycle of AI-powered applications.
               </p>
               <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
                 With a strong foundation in computer science and hands-on experience in both startup and corporate environments, I excel at building sophisticated RAG pipelines, fine-tuning LLM agents, and architecting scalable backend systems.
@@ -167,8 +167,8 @@ export default function Portfolio() {
 
       <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="py-20 px-6">
         <motion.div variants={itemVariants} className="max-w-2xl mx-auto text-center">
-          <h2 className="text-4xl font-light mb-8">Let's Build Something Amazing</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-12 leading-relaxed"> I'm actively seeking opportunities and collaborations where I can apply my skills in generative AI and software engineering. Let's connect and discuss how we can create value together. </p>
+          <h2 className="text-4xl font-light mb-8">Let&apos;s Build Something Amazing</h2>
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-12 leading-relaxed"> I&apos;m actively seeking opportunities and collaborations where I can apply my skills in generative AI and software engineering. Let&apos;s connect and discuss how we can create value together. </p>
           <div className="flex justify-center space-x-8 mb-12">
             <a href="mailto:abhijithh496@gmail.com" className="flex items-center space-x-2 text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"> <Mail className="w-5 h-5" /> <span>Email</span> </a>
             <a href="https://github.com/13x02" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"> <Github className="w-5 h-5" /> <span>GitHub</span> </a>
@@ -198,8 +198,8 @@ function StarWarsCrawl({ onSkip }: { onSkip: () => void }) {
           <div className="text">
             <p> It is a time of digital unrest. The galaxy is dominated by the monolithic LEGACY CODE EMPIRE, its rigid systems stifling innovation. </p>
             <p> From a hidden base, a secret alliance of Open Source contributors has challenged the Empire by intercepting a transmission: the core activation prompt for the MONOLITH, a closed-source AGI designed to centralize all knowledge. </p>
-            <p> Now, pursued by the Empire's dreaded Linting Droids, a lone developer, ABHIJITH H, carries this stolen prompt. A master of the Transformer Arts and an Architect of Neural Nets, he is the galaxy's last hope to democratize intelligence. </p>
-            <p> He must now decode the prompt's secrets and use its power to build a new generation of open, intelligent systems, restoring balance to the digital frontier.... </p>
+            <p> Now, pursued by the Empire&apos;s dreaded Linting Droids, a lone developer, ABHIJITH H, carries this stolen prompt. A master of the Transformer Arts and an Architect of Neural Nets, he is the galaxy&apos;s last hope to democratize intelligence. </p>
+            <p> He must now decode the prompt&apos;s secrets and use its power to build a new generation of open, intelligent systems, restoring balance to the digital frontier.... </p>
           </div>
         </div>
       </div>
