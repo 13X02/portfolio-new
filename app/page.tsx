@@ -92,11 +92,9 @@ export default function Portfolio() {
             Abhijith H
           </motion.h1>
           <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-xl md:text-2xl font-light text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-            Generative AI Developer building intelligent, data driven solutions from concept to production.
+            Software Engineer
           </motion.p>
-          <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.6 }} className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Specializing in Retrieval Augmented Generation (RAG), LLM agents, and full-stack application development. I design and implement AI systems that are scalable, efficient, and solve real world problems.
-          </motion.p>
+          
         </div>
         <div className="absolute bottom-8 animate-bounce z-10">
           <ArrowDown className="w-6 h-6 text-gray-400 dark:text-gray-500" />
