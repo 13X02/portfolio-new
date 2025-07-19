@@ -10,7 +10,7 @@ import { Github, Linkedin, Mail, ExternalLink, ArrowDown } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/ThemeToggle" // Assumes you have this component
 import { ShootingStars } from "@/components/ui/shooting-stars"
 import { StarsBackground } from "@/components/ui/stars-background"
-
+import { HeroThreeScene } from "@/components/herothreescene"
 const poppins = Poppins({
   subsets: ['latin'],
   weight: ['300', '400', '500', '700']
@@ -83,6 +83,7 @@ export default function Portfolio() {
         <div className="absolute inset-0 z-0">
           <StarsBackground />
           <ShootingStars />
+          <HeroThreeScene />
         </div>
 
         {/* FIX 3: The text content needs a z-index to ensure it's on top of the stars. */}
@@ -91,10 +92,10 @@ export default function Portfolio() {
             Abhijith H
           </motion.h1>
           <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-xl md:text-2xl font-light text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-            Generative AI Developer building intelligent, data-driven solutions from concept to production.
+            Generative AI Developer building intelligent, data driven solutions from concept to production.
           </motion.p>
           <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.6 }} className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
-            Specializing in Retrieval-Augmented Generation (RAG), LLM agents, and full-stack application development. I design and implement AI systems that are scalable, efficient, and solve real-world problems.
+            Specializing in Retrieval Augmented Generation (RAG), LLM agents, and full-stack application development. I design and implement AI systems that are scalable, efficient, and solve real world problems.
           </motion.p>
         </div>
         <div className="absolute bottom-8 animate-bounce z-10">
@@ -112,7 +113,7 @@ export default function Portfolio() {
                 I&apos;m a passionate and entrepreneurial engineer, currently co-founding an AI product studio, nevolabs, while also contributing to enterprise-grade AI solutions at UST. My focus is on the complete development lifecycle of AI-powered applications.
               </p>
               <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                With a strong foundation in computer science and hands-on experience in both startup and corporate environments, I excel at building sophisticated RAG pipelines, fine-tuning LLM agents, and architecting scalable backend systems.
+                With a strong foundation in computer science and hands on experience in both startup and corporate environments, I excel at building sophisticated RAG pipelines, fine tuning LLM agents, and architecting scalable backend systems.
               </p>
               <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
                 I thrive on turning complex problems into elegant, functional products and am always exploring new frontiers in generative AI and software engineering.
