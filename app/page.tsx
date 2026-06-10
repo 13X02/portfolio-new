@@ -1,289 +1,623 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Poppins } from 'next/font/google'
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Github, Linkedin, Mail, ExternalLink, ArrowDown } from "lucide-react"
-import { ThemeToggle } from "@/components/ui/ThemeToggle" // Assumes you have this component
-import { ShootingStars } from "@/components/ui/shooting-stars"
-import { StarsBackground } from "@/components/ui/stars-background"
-import { HeroThreeScene } from "@/components/herothreescene"
-const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '700']
-})
+import { useEffect } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger, ScrollSmoother, SplitText, DrawSVGPlugin } from 'gsap/all';
+import { initScene } from '@/lib/scene';
 
-export default function Portfolio() {
-  const [showCrawl, setShowCrawl] = useState(true)
-  const [mousePosition, setMousePosition] = useState({ x: -200, y: -200 })
-  const [isHovering, setIsHovering] = useState(false)
+gsap.registerPlugin(ScrollTrigger, ScrollSmoother, SplitText, DrawSVGPlugin);
 
+export default function Home() {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowCrawl(false)
-    }, 30000)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const rand = gsap.utils.random;
 
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY })
+    // ---------------------------------------------------------------- WebGL
+    const canvas = document.getElementById('webgl') as HTMLCanvasElement;
+    const sceneApi = initScene(canvas);
+
+    // ---------------------------------------------------------------- Smooth scroll
+    const smoother = ScrollSmoother.create({
+      smooth: reduced ? 0 : 1.2,
+      effects: true,
+      normalizeScroll: true,
+    });
+
+    // feed total page progress to the 3D scene
+    ScrollTrigger.create({
+      trigger: document.body,
+      start: 0,
+      end: 'max',
+      onUpdate: (self) => sceneApi.setScroll(self.progress),
+    });
+
+    // ---------------------------------------------------------------- Custom cursor
+    const cursor = document.querySelector('.cursor') as HTMLElement;
+    const cursorDot = document.querySelector('.cursor-dot') as HTMLElement;
+    if (matchMedia('(hover: hover)').matches) {
+      const xTo = gsap.quickTo(cursor, 'x', { duration: 0.45, ease: 'power3' });
+      const yTo = gsap.quickTo(cursor, 'y', { duration: 0.45, ease: 'power3' });
+      const dxTo = gsap.quickTo(cursorDot, 'x', { duration: 0.12, ease: 'power3' });
+      const dyTo = gsap.quickTo(cursorDot, 'y', { duration: 0.12, ease: 'power3' });
+      window.addEventListener('pointermove', (e) => {
+        xTo(e.clientX);
+        yTo(e.clientY);
+        dxTo(e.clientX);
+        dyTo(e.clientY);
+      });
+      const hoverables = document.querySelectorAll('.hoverable');
+      hoverables.forEach((el) => {
+        el.addEventListener('pointerenter', () => cursor.classList.add('is-hover'));
+        el.addEventListener('pointerleave', () => cursor.classList.remove('is-hover'));
+      });
     }
-    window.addEventListener("mousemove", handleMouseMove)
+
+    // ---------------------------------------------------------------- Random floaters
+    const FLOATER_SHAPES = [
+      `<svg viewBox="0 0 40 40" width="100%" height="100%"><path d="M20 2 L24 16 L38 20 L24 24 L20 38 L16 24 L2 20 L16 16 Z" fill="COLOR" opacity="0.9"/></svg>`,
+      `<svg viewBox="0 0 40 40" width="100%" height="100%"><circle cx="20" cy="20" r="14" fill="none" stroke="COLOR" stroke-width="3"/></svg>`,
+      `<svg viewBox="0 0 60 24" width="100%" height="100%"><path d="M2 12 Q 12 2, 22 12 T 42 12 T 58 12" fill="none" stroke="COLOR" stroke-width="3" stroke-linecap="round"/></svg>`,
+      `<svg viewBox="0 0 40 40" width="100%" height="100%"><rect x="8" y="8" width="24" height="24" rx="6" fill="none" stroke="COLOR" stroke-width="3" transform="rotate(15 20 20)"/></svg>`,
+      `<svg viewBox="0 0 40 40" width="100%" height="100%"><path d="M20 4 Q 34 20, 20 36 Q 6 20, 20 4 Z" fill="COLOR" opacity="0.85"/></svg>`,
+    ];
+    const FLOATER_COLORS = ['#7dd6ff', '#b48dff', '#ff9d7d', '#9dffb0'];
+
+    function spawnFloaters(container: Element | null, count: number) {
+      if (!container || reduced) return;
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'floater';
+        const size = rand(14, 44);
+        el.style.width = `${size}px`;
+        el.style.height = `${size}px`;
+        el.style.left = `${rand(3, 94)}%`;
+        el.style.top = `${rand(5, 90)}%`;
+        el.innerHTML = rand(FLOATER_SHAPES).replaceAll('COLOR', rand(FLOATER_COLORS));
+        container.appendChild(el);
+
+        gsap.to(el, { opacity: rand(0.25, 0.8), duration: 1.2, delay: rand(0.5, 2.5) });
+        gsap.to(el, {
+          y: rand(-90, 90),
+          x: rand(-60, 60),
+          rotation: rand(-180, 180),
+          duration: rand(7, 16),
+          repeat: -1,
+          yoyo: true,
+          ease: 'sine.inOut',
+          delay: rand(0, 3),
+        });
+      }
+    }
+    spawnFloaters(document.querySelector('.hero-floaters'), 14);
+    spawnFloaters(document.querySelector('.contact-floaters'), 10);
+
+    // ---------------------------------------------------------------- Intro
+    const intro = gsap.timeline({ paused: true });
+
+    const heroSplit = new SplitText('.hero-title', { type: 'chars', charsClass: 'char' });
+    const subSplit = new SplitText('.hero-sub', { type: 'lines' });
+
+    intro
+      .to('.loader', { autoAlpha: 0, duration: 0.6, ease: 'power2.inOut' })
+      .from(heroSplit.chars, {
+        yPercent: 130,
+        rotation: () => rand(-14, 14),
+        opacity: 0,
+        duration: 1.1,
+        ease: 'back.out(1.6)',
+        stagger: { each: 0.05, from: 'random' },
+      }, '-=0.25')
+      .from('.hero-kicker', { y: 24, opacity: 0, duration: 0.7, ease: 'power3.out' }, '-=0.7')
+      .from('#squiggle-path', { drawSVG: '0%', duration: 1.1, ease: 'power2.inOut' }, '-=0.5')
+      .from(subSplit.lines, { y: 30, opacity: 0, stagger: 0.12, duration: 0.8, ease: 'power3.out' }, '-=0.7')
+      .from('.hero-cta-row, .scroll-hint', { y: 26, opacity: 0, stagger: 0.15, duration: 0.8, ease: 'power3.out' }, '-=0.5')
+      .from('.nav-pill', { y: -60, opacity: 0, duration: 0.9, ease: 'elastic.out(1, 0.7)' }, '-=0.8');
+
+    // loader glyph spin while assets settle
+    gsap.to('.loader-glyph', { rotation: 360, duration: 1.1, repeat: -1, ease: 'none' });
+
+    window.addEventListener('load', () => {
+      intro.play();
+      sceneApi.intro();
+      ScrollTrigger.refresh();
+    });
+    // fallback if load already fired or hangs
+    setTimeout(() => {
+      if (!intro.isActive() && intro.progress() === 0) {
+        intro.play();
+        sceneApi.intro();
+      }
+    }, 2500);
+
+    // spread the gradient across the chars, then let it shimmer forever
+    {
+      const chars = heroSplit.chars;
+      const n = Math.max(chars.length - 1, 1);
+      chars.forEach((c, i) => gsap.set(c, { backgroundPositionX: `${(i / n) * 100}%` }));
+      gsap.to(chars, {
+        backgroundPositionX: '+=22%',
+        duration: 5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut',
+        stagger: 0.08,
+      });
+    }
+
+    // scroll hint ball
+    gsap.to('.scroll-hint-ball', {
+      cy: 34,
+      duration: 1.1,
+      repeat: -1,
+      yoyo: true,
+      ease: 'power2.inOut',
+    });
+
+    // hero exits with a scrub as you scroll away.
+    intro.eventCallback('onComplete', () => {
+      gsap.to('.hero-title, .hero-sub, .hero-kicker, .hero-squiggle', {
+        yPercent: -40,
+        opacity: 0,
+        stagger: 0.04,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.hero',
+          start: 'top top',
+          end: '70% top',
+          scrub: true,
+        },
+      });
+    });
+
+    // ---------------------------------------------------------------- Marquee (velocity-reactive)
+    const marqueeTrack = document.querySelector('.marquee-track') as HTMLElement;
+    const marqueeTween = gsap.to(marqueeTrack, {
+      xPercent: -50,
+      duration: 22,
+      repeat: -1,
+      ease: 'none',
+    });
+    ScrollTrigger.create({
+      trigger: '.marquee',
+      start: 'top bottom',
+      end: 'bottom top',
+      onUpdate: (self) => {
+        const v = self.getVelocity();
+        gsap.to(marqueeTween, { timeScale: 1 + Math.min(Math.abs(v) / 900, 5) * Math.sign(v || 1), duration: 0.4, overwrite: true });
+        gsap.to(marqueeTrack, { skewX: gsap.utils.clamp(-12, 12, v / 220), duration: 0.4, overwrite: 'auto' });
+        gsap.to(marqueeTrack, { skewX: 0, duration: 0.8, delay: 0.15 });
+      },
+    });
+
+    // ---------------------------------------------------------------- About
+    const aboutLines = gsap.utils.toArray('.about-heading .line') as Element[];
+    aboutLines.forEach((line, i) => {
+      gsap.from(line, {
+        yPercent: 110,
+        duration: 1,
+        ease: 'power4.out',
+        scrollTrigger: { trigger: line, start: 'top 85%' },
+        delay: i * 0.12,
+      });
+    });
+
+    ScrollTrigger.batch('.reveal', {
+      start: 'top 88%',
+      onEnter: (els) =>
+        gsap.fromTo(
+          els,
+          { y: 60, opacity: 0 },
+          { y: 0, opacity: 1, stagger: 0.12, duration: 1, ease: 'power3.out', overwrite: true }
+        ),
+    });
+
+    // counters
+    const statNums = gsap.utils.toArray('.stat-num') as Element[];
+    statNums.forEach((el) => {
+      const target = +(el as HTMLElement).dataset.value!;
+      gsap.fromTo(
+        el,
+        { innerText: 0 },
+        {
+          innerText: target,
+          duration: 1.8,
+          snap: { innerText: 1 },
+          ease: 'power2.out',
+          scrollTrigger: { trigger: el, start: 'top 88%' },
+        }
+      );
+    });
+
+    // ---------------------------------------------------------------- Work: pinned horizontal scroll
+    const track = document.querySelector('.work-track') as HTMLElement;
+    const workTween = gsap.to(track, {
+      x: () => -(track.scrollWidth - window.innerWidth + window.innerWidth * 0.06),
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.work',
+        pin: true,
+        scrub: 1,
+        start: 'top top',
+        end: () => '+=' + (track.scrollWidth - window.innerWidth),
+        invalidateOnRefresh: true,
+      },
+    });
+
+    // each card tilts in as it enters from the right
+    const projects = gsap.utils.toArray('.project') as Element[];
+    projects.forEach((card) => {
+      gsap.from(card, {
+        rotationY: 24,
+        rotationZ: 3,
+        scale: 0.86,
+        opacity: 0.4,
+        transformPerspective: 900,
+        ease: 'none',
+        scrollTrigger: {
+          containerAnimation: workTween,
+          trigger: card,
+          start: 'left 105%',
+          end: 'left 55%',
+          scrub: true,
+        },
+      });
+      // number drifts inside the card for depth
+      gsap.fromTo(
+        card.querySelector('.project-num'),
+        { xPercent: -28 },
+        {
+          xPercent: 28,
+          ease: 'none',
+          scrollTrigger: {
+            containerAnimation: workTween,
+            trigger: card,
+            start: 'left right',
+            end: 'right left',
+            scrub: true,
+          },
+        }
+      );
+    });
+
+    // ---------------------------------------------------------------- Experience: stagger in cards
+    gsap.from('.process-heading', {
+      y: 50,
+      opacity: 0,
+      duration: 1,
+      ease: 'power3.out',
+      scrollTrigger: { trigger: '#experience', start: 'top 75%' },
+    });
+
+    // ---------------------------------------------------------------- Contact
+    const contactLines = gsap.utils.toArray('.contact-heading .line') as Element[];
+    contactLines.forEach((line, i) => {
+      gsap.from(line, {
+        yPercent: 115,
+        duration: 1.1,
+        ease: 'power4.out',
+        scrollTrigger: { trigger: '.contact-heading', start: 'top 78%' },
+        delay: i * 0.12,
+      });
+    });
 
     return () => {
-      clearTimeout(timer)
-      window.removeEventListener("mousemove", handleMouseMove)
-    }
-  }, [])
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } },
-  }
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
-  }
-
-  if (showCrawl) {
-    return <StarWarsCrawl onSkip={() => setShowCrawl(false)} />
-  }
+      // Cleanup
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
+    };
+  }, []);
 
   return (
-    // Define CSS variables for star colors. Tailwind's dark: prefix will toggle them automatically.
-    <div
-      className={`${poppins.className} 
-        min-h-screen 
-        bg-white text-black dark:bg-black dark:text-white 
-        [--star-rgb:0,0,0] dark:[--star-rgb:255,255,255]
-        transition-colors duration-500 relative isolate cursor-none`}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
-      <div
-        className="pointer-events-none fixed z-50 rounded-full bg-white transition-opacity duration-300"
-        style={{ opacity: isHovering ? 1 : 0, mixBlendMode: 'difference', left: `${mousePosition.x}px`, top: `${mousePosition.y}px`, width: '25px', height: '25px', transform: 'translate(-50%, -50%)' }}
-      />
+    <>
+      {/* SVG DEFS: liquid lens filters */}
+      <svg className="svg-defs" aria-hidden="true">
+        <defs>
+          <filter id="liquid-lens" x="-35%" y="-35%" width="170%" height="170%" colorInterpolationFilters="sRGB">
+            <feTurbulence id="lens-turb" type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="7" result="noise" />
+            <feGaussianBlur in="noise" stdDeviation="2" result="softNoise" />
+            <feDisplacementMap id="lens-disp" in="SourceGraphic" in2="softNoise" scale="46" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <filter id="liquid-lens-strong" x="-50%" y="-50%" width="200%" height="200%" colorInterpolationFilters="sRGB">
+            <feTurbulence id="lens-turb-strong" type="fractalNoise" baseFrequency="0.008 0.02" numOctaves="3" seed="42" result="noise" />
+            <feGaussianBlur in="noise" stdDeviation="1.5" result="softNoise" />
+            <feDisplacementMap in="SourceGraphic" in2="softNoise" scale="72" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+          <filter id="liquid-lens-chroma" x="-35%" y="-35%" width="170%" height="170%" colorInterpolationFilters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="0.014 0.02" numOctaves="2" seed="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="34" xChannelSelector="R" yChannelSelector="G" result="disp" />
+            <feColorMatrix in="disp" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red" />
+            <feOffset in="red" dx="2" dy="0" result="redShift" />
+            <feColorMatrix in="disp" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" result="cyan" />
+            <feBlend in="redShift" in2="cyan" mode="screen" />
+          </filter>
+        </defs>
+      </svg>
 
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
+      {/* WebGL canvas */}
+      <canvas id="webgl"></canvas>
+
+      {/* Film grain */}
+      <div className="grain" aria-hidden="true"></div>
+
+      {/* Custom cursor */}
+      <div className="cursor" aria-hidden="true"></div>
+      <div className="cursor-dot" aria-hidden="true"></div>
+
+      {/* Loader */}
+      <div className="loader">
+        <div className="loader-inner">
+          <span className="loader-glyph">◌</span>
+          <span className="loader-text">bending light…</span>
+        </div>
       </div>
 
-      {/* === HERO SECTION (CORRECTED) === */}
-      <motion.section
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        // FIX 1: The hero section gets its theme-aware background back.
-        className="min-h-screen flex flex-col justify-center items-center px-6 relative overflow-hidden bg-white dark:bg-black transition-colors duration-500"
-      >
-        {/* FIX 2: This container is now TRANSPARENT and just positions the stars. */}
-        <div className="absolute inset-0 z-0">
-          <StarsBackground />
-          <ShootingStars />
-          <HeroThreeScene />
-        </div>
+      {/* NAV */}
+      <header className="nav">
+        <nav className="nav-pill glass glass-strong">
+          <a className="nav-logo hoverable" href="#top">
+            A<span>.</span>
+          </a>
+          <div className="nav-links">
+            <a className="hoverable" href="#about">
+              About
+            </a>
+            <a className="hoverable" href="#work">
+              Work
+            </a>
+            <a className="hoverable" href="#experience">
+              Experience
+            </a>
+          </div>
+          <a className="nav-cta hoverable" href="#contact">
+            Let's talk
+          </a>
+        </nav>
+      </header>
 
-        {/* FIX 3: The text content needs a z-index to ensure it's on top of the stars. */}
-        <div className="max-w-4xl text-center z-10">
-           <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-6xl md:text-8xl font-normal mb-6 tracking-tight text-black dark:text-white">
-            Abhijith H
-          </motion.h1>
-          <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }} className="text-xl md:text-2xl font-light text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-            Software Engineer
-          </motion.p>
-          
-        </div>
-        <div className="absolute bottom-8 animate-bounce z-10">
-          <ArrowDown className="w-6 h-6 text-gray-400 dark:text-gray-500" />
-        </div>
-      </motion.section>
+      <div id="smooth-wrapper">
+        <div id="smooth-content">
+          <main id="top">
+            {/* HERO */}
+            <section className="hero">
+              <div className="hero-floaters" aria-hidden="true"></div>
 
-      {/* The rest of your portfolio sections */}
-      <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="py-20 px-6 bg-gray-50 dark:bg-zinc-900">
-        <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-normal mb-16 text-center">About</h2>
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div>
-              <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                I&apos;m a passionate and entrepreneurial engineer, currently co-founding an AI product studio, nevolabs, while also contributing to enterprise-grade AI solutions at UST. My focus is on the complete development lifecycle of AI-powered applications.
+              <p className="hero-kicker">
+                <span className="kicker-dot"></span> AI Engineer — LLMs, Agents &amp; AI
               </p>
-              <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                With a strong foundation in computer science and hands on experience in both startup and corporate environments, I excel at building sophisticated RAG pipelines, fine tuning LLM agents, and architecting scalable backend systems.
+
+              <h1 className="hero-title" aria-label="ABHIJITH">
+                ABHIJITH H
+              </h1>
+
+              <svg className="hero-squiggle" viewBox="0 0 600 60" fill="none" aria-hidden="true">
+                <path
+                  id="squiggle-path"
+                  d="M5 35 Q 60 5, 120 32 T 240 30 T 360 34 T 480 28 T 595 32"
+                  stroke="url(#squiggle-grad)"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                />
+                <defs>
+                  <linearGradient id="squiggle-grad" x1="0" y1="0" x2="600" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stopColor="#7dd6ff" />
+                    <stop offset="0.5" stopColor="#b48dff" />
+                    <stop offset="1" stopColor="#ff9d7d" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <p className="hero-sub">
+                I build systems that are fun, intelligent and impactful.<br />
+                Currently engineering at <em>nuvae</em>.
               </p>
-              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-                I thrive on turning complex problems into elegant, functional products and am always exploring new frontiers in generative AI and software engineering.
-              </p>
+
+              <div className="hero-cta-row">
+                <a href="#work" className="btn-glass glass hoverable">
+                  <span>See the work</span>
+                  <svg viewBox="0 0 24 24" width="18" height="18">
+                    <path d="M12 4v14m0 0l-6-6m6 6l6-6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </a>
+              </div>
+
+              <div className="scroll-hint" aria-hidden="true">
+                <svg viewBox="0 0 30 50" width="26" height="44" fill="none">
+                  <rect x="2" y="2" width="26" height="46" rx="13" stroke="rgba(255,255,255,.45)" strokeWidth="2.5" />
+                  <circle className="scroll-hint-ball" cx="15" cy="14" r="4" fill="#7dd6ff" />
+                </svg>
+                <span>scroll</span>
+              </div>
+            </section>
+
+            {/* MARQUEE */}
+            <div className="marquee" aria-hidden="true">
+              <div className="marquee-track">
+                <span>REFRACT&nbsp;✦&nbsp;DISPERSE&nbsp;✦&nbsp;DISTORT&nbsp;✦&nbsp;DISSOLVE&nbsp;✦&nbsp;</span>
+                <span>REFRACT&nbsp;✦&nbsp;DISPERSE&nbsp;✦&nbsp;DISTORT&nbsp;✦&nbsp;DISSOLVE&nbsp;✦&nbsp;</span>
+                <span>REFRACT&nbsp;✦&nbsp;DISPERSE&nbsp;✦&nbsp;DISTORT&nbsp;✦&nbsp;DISSOLVE&nbsp;✦&nbsp;</span>
+                <span>REFRACT&nbsp;✦&nbsp;DISPERSE&nbsp;✦&nbsp;DISTORT&nbsp;✦&nbsp;DISSOLVE&nbsp;✦&nbsp;</span>
+              </div>
             </div>
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-xl font-medium mb-4">Core Expertise</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <Badge variant="outline" className="justify-center py-2 dark:border-gray-600"> Generative AI </Badge>
-                  <Badge variant="outline" className="justify-center py-2 dark:border-gray-600"> RAG Pipelines </Badge>
-                  <Badge variant="outline" className="justify-center py-2 dark:border-gray-600"> LLM Agents </Badge>
-                  <Badge variant="outline" className="justify-center py-2 dark:border-gray-600"> Full-Stack Dev </Badge>
-                  <Badge variant="outline" className="justify-center py-2 dark:border-gray-600"> REST APIs </Badge>
-                  <Badge variant="outline" className="justify-center py-2 dark:border-gray-600"> Agile Methodologies </Badge>
+
+            {/* ABOUT */}
+            <section className="about" id="about">
+              <div className="about-card glass reveal">
+                <p className="section-tag">01 / About</p>
+                <h2 className="about-heading">
+                  <span className="line">Merging curiosity</span>
+                  <span className="line">
+                    with <i>code</i>.
+                  </span>
+                </h2>
+                <p className="about-body reveal">
+                  I thrive on turning complex problems into elegant, functional products and am always exploring new frontiers in generative AI and software engineering.
+                </p>
+                <div className="stats">
+                  <div className="stat reveal">
+                    <span className="stat-num" data-value="2">
+                      0
+                    </span>
+                    <span className="stat-suffix">yrs</span>
+                    <p>Experience</p>
+                  </div>
+                  <div className="stat reveal">
+                    <span className="stat-num" data-value="10">
+                      0
+                    </span>
+                    <span className="stat-suffix">+</span>
+                    <p>shipped projects</p>
+                  </div>
+                  <div className="stat reveal">
+                    <span className="stat-num" data-value="120">
+                      0
+                    </span>
+                    <span className="stat-suffix">fps</span>
+                    <p>or we don't ship</p>
+                  </div>
                 </div>
               </div>
-              <div>
-                <h3 className="text-xl font-medium mb-4">Technologies</h3>
-                <div className="text-gray-600 dark:text-gray-400 space-y-2">
-                  <div>Python • Java • JavaScript • SQL</div>
-                  <div>LangChain • dspy • Spring Boot • React</div>
-                  <div>AWS • Git • FAISS • Tailwind CSS</div>
+            </section>
+
+            {/* WORK */}
+            <section className="work" id="work">
+              <div className="work-header">
+                <p className="section-tag">02 / Selected work</p>
+                <h2 className="work-heading">Things I've worked on recently</h2>
+              </div>
+              <div className="work-track">
+                <article className="project glass hoverable" data-hue="195">
+                  <div className="project-visual visual-a">
+                    <span className="project-num">01</span>
+                  </div>
+                  <div className="project-meta">
+                    <h3>Baremetal OS</h3>
+                    <p>A lightweight operating system built from scratch in Rust. Implements core kernel functionality, memory management, and process scheduling with zero dependencies.</p>
+                    <div className="tags">
+                      <span>Rust</span>
+                      <span>Systems Programming</span>
+                      <span>Kernel</span>
+                    </div>
+                  </div>
+                </article>
+                <article className="project glass hoverable" data-hue="265">
+                  <div className="project-visual visual-b">
+                    <span className="project-num">02</span>
+                  </div>
+                  <div className="project-meta">
+                    <h3>PodStitch</h3>
+                    <p>AI-powered podcast tool using local recording for crystal-clear audio capture. Built with Next.js for seamless editing, stitching, and multi-track management.</p>
+                    <div className="tags">
+                      <span>Next.js</span>
+                      <span>Web Audio API</span>
+                      <span>AI Processing</span>
+                    </div>
+                  </div>
+                </article>
+                <article className="project glass hoverable" data-hue="20">
+                  <div className="project-visual visual-c">
+                    <span className="project-num">03</span>
+                  </div>
+                  <div className="project-meta">
+                    <h3>Contract Analytics</h3>
+                    <p>Real-time contract analysis platform with AI-powered insights. Tracks obligations, deadlines, and compliance metrics across enterprise agreements.</p>
+                    <div className="tags">
+                      <span>React</span>
+                      <span>LLM Integration</span>
+                      <span>Data Visualization</span>
+                    </div>
+                  </div>
+                </article>
+                <article className="project glass hoverable" data-hue="140">
+                  <div className="project-visual visual-d">
+                    <span className="project-num">04</span>
+                  </div>
+                  <div className="project-meta">
+                    <h3>Bravio FSM</h3>
+                    <p>Field service management software optimizing technician dispatch and job scheduling. Real-time tracking, customer communication, and revenue analytics.</p>
+                    <div className="tags">
+                      <span>Full Stack</span>
+                      <span>Maps & Geolocation</span>
+                      <span>Real-time Sync</span>
+                    </div>
+                  </div>
+                </article>
+                <div className="work-endcap">
+                  <p>
+                    that's it
+                    <br />
+                    (for now)
+                  </p>
                 </div>
               </div>
-            </div>
-          </div>
-        </motion.div>
-      </motion.section>
+            </section>
 
-      <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={containerVariants} className="py-20 px-6">
-        <motion.div variants={itemVariants} className="max-w-4xl mx-auto">
-          <h2 className="text-4xl font-normal mb-16 text-center">Experience</h2>
-          <div className="relative">
-            <div className="absolute left-8 top-0 bottom-0 w-px bg-gray-300 dark:bg-gray-700 hidden md:block"></div>
-            <motion.div variants={containerVariants} initial="hidden" whileInView="visible" className="space-y-12">
-              <ExperienceItem year="Sep 2024 - Present" title="Cofounder & Lead Developer" company="nevolabs (Product Studio)" description="Co-founded a product studio to create AI-powered B2B solutions. Leading the end-to-end development of our flagship product, Onvoke, an AI generator for SOPs and technical documentation." skills={["AI Strategy", "Product Dev", "RAG", "LangChain", "Python"]} />
-              <ExperienceItem year="July 2024 - Present" title="Developer I - Software Engineering" company="UST" description="Develop and optimize RAG pipelines using LangChain and FAISS, improving information retrieval latency. Building and fine-tuning LLM agents with OpenAI/Gemini for intelligent automation and pioneering a context-aware coding assistant." skills={["Generative AI", "RAG", "LangChain", "FAISS", "AWS Lambda"]} />
-              <ExperienceItem year="Jan 2024 - Jun 2024" title="Software Developer Trainee" company="UST" description="Completed an intensive training program focused on full-stack development. Contributed to internal projects, assisting senior developers in building and testing REST APIs with Spring Boot and developing UI components with React." skills={["Java", "Spring Boot", "React", "REST APIs", "Agile"]} />
-              <ExperienceItem year="May 2023 - Aug 2023" title="Frontend Developer Intern" company="IHRD" description="Developed and maintained responsive user interfaces for client websites using React and Tailwind CSS. Collaborated with designers to translate Figma mockups into interactive web components and ensured cross-browser compatibility." skills={["React", "JavaScript", "Tailwind CSS", "HTML/CSS", "Figma"]} />
-            </motion.div>
-          </div>
-        </motion.div>
-      </motion.section>
+            {/* EXPERIENCE */}
+            <section className="process" id="experience">
+              <p className="section-tag centered">03 / Experience</p>
+              <h2 className="process-heading">Work & Impact</h2>
 
-      <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={containerVariants} className="py-20 px-6 bg-gray-50 dark:bg-zinc-900">
-        <motion.div variants={itemVariants} className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-normal mb-16 text-center">Selected Projects</h2>
-          <motion.div variants={containerVariants} initial="hidden" whileInView="visible" className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <ProjectCard title="Onvoke - AI SOP Generator" description="Engineered an AI platform to automatically generate Standard Operating Procedures (SOPs) from user inputs, using a sophisticated RAG pipeline to ensure accuracy." tech={["Python", "LangChain", "RAG", "FAISS", "LLM APIs"]} status="Production" />
-            <ProjectCard title="AI-Powered Interview Prep" description="A tool that scrapes a company's website to craft personalized answers to the 'Why work here?' interview question. Deployed on AWS Lambda for scalable, on-demand generation." tech={["Python", "LangChain", "Vector DBs", "AWS Lambda"]} status="Live" />
-            <ProjectCard title="Context-Aware Coding Assistant" description="Architected an end-to-end coding assistant agent using LangGraph. The system understands project context to provide relevant code suggestions, bug fixes, and documentation." tech={["LangGraph", "LangChain", "LLM Agents", "Python", "CI/CD"]} status="Beta" />
-            <ProjectCard title="Full-Stack E-commerce API" description="Designed and developed a complete backend system for an e-commerce platform using Spring Boot. Features include user authentication, product management, and order processing." tech={["Java", "Spring Boot", "REST API", "SQL", "Postman"]} status="Beta" />
-            <ProjectCard title="RAG Evaluation Framework" description="A modular framework in Python to benchmark and evaluate the performance of different RAG pipeline configurations, measuring metrics like faithfulness and answer relevancy." tech={["Python", "dspy", "RAG", "Evaluation", "Pandas"]} status="Research" />
-            <ProjectCard title="Interactive Developer Portfolio" description="A dynamic, responsive portfolio website built with Next.js and Tailwind CSS, featuring smooth animations with Framer Motion and a theme toggle for user preference." tech={["Next.js", "React", "Tailwind CSS", "Framer Motion"]} status="Live" />
-          </motion.div>
-        </motion.div>
-      </motion.section>
+              <div className="process-body">
+                <div className="step glass reveal" style={{ '--step-y': '12%', '--step-side': 'flex-end' } as any}>
+                  <span className="step-no">2025 - Now</span>
+                  <h3>Product Engineer @ nuvae</h3>
+                  <p>Building intelligent healthcare agent systems and LLM-powered applications. Specializing in RAG pipelines, multi-agent orchestration, and production AI infrastructure.</p>
+                </div>
+                <div className="step glass reveal" style={{ '--step-y': '31%', '--step-side': 'flex-start' } as any}>
+                  <span className="step-no">2024 - 2025</span>
+                  <h3>Developer - I @ UST </h3>
+                  <p>Developed Gen AI powered POC for multiple use cases.Leveraged large language models to enhance user experience and streamline workflows.</p>
+                </div>
+                <div className="step glass reveal" style={{ '--step-y': '50%', '--step-side': 'flex-end' } as any}>
+                  <span className="step-no">2024 - 2024</span>
+                  <h3>Software Engineer Trainee @ UST </h3>
+                  <p>Trained in software development principles and practices. Gained hands-on experience with various programming languages and frameworks.</p>
+                </div>
+                <div className="step glass reveal" style={{ '--step-y': '69%', '--step-side': 'flex-start' } as any}>
+                  <span className="step-no">2023 - 2024</span>
+                  <h3>Frontend Developer Intern @ IHRD</h3>
+                  <p>Started journey with JavaScript and web fundamentals. Contributed to IHRD-KP joint projects.</p>
+                </div>
+              </div>
+            </section>
 
-      <motion.section initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={containerVariants} className="py-20 px-6">
-        <motion.div variants={itemVariants} className="max-w-2xl mx-auto text-center">
-          <h2 className="text-4xl font-normal mb-8">Let&apos;s Build Something Amazing</h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-12 leading-relaxed"> I&apos;m actively seeking opportunities and collaborations where I can apply my skills in generative AI and software engineering. Let&apos;s connect and discuss how we can create value together. </p>
-          <div className="flex justify-center space-x-8 mb-12">
-            <a href="mailto:abhijithh496@gmail.com" className="flex items-center space-x-2 text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"> <Mail className="w-5 h-5" /> <span>Email</span> </a>
-            <a href="https://github.com/13x02" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"> <Github className="w-5 h-5" /> <span>GitHub</span> </a>
-            <a href="https://linkedin.com/in/13x02" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white transition-colors"> <Linkedin className="w-5 h-5" /> <span>LinkedIn</span> </a>
-          </div>
-          <Button asChild className="bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 px-8 py-3">
-            <a href="mailto:abhijithh496@gmail.com">Get In Touch</a>
-          </Button>
-        </motion.div>
-      </motion.section>
-      
-   
-    </div>
-  )
-}
-
-// Sub-components (StarWarsCrawl, ExperienceItem, ProjectCard) remain the same
-// ... (include the unchanged sub-components here)
-
-function StarWarsCrawl({ onSkip }: { onSkip: () => void }) {
-  return (
-    <div className="fixed inset-0 bg-black overflow-hidden cursor-pointer" onClick={onSkip}>
-      <div className="stars"></div>
-      <div className="stars2"></div>
-      <div className="stars3"></div>
-      <div className="crawl-container">
-        <div className="crawl">
-          <div className="title">
-            <h1>EPISODE I</h1>
-            <h2>THE PROMPT OF HOPE</h2>
-          </div>
-          <div className="text">
-            <p> It is a time of digital unrest. The galaxy is dominated by the monolithic LEGACY CODE EMPIRE, its rigid systems stifling innovation. </p>
-            <p> From a hidden base, a secret alliance of Open Source contributors has challenged the Empire by intercepting a transmission: the core activation prompt for the MONOLITH, a closed-source AGI designed to centralize all knowledge. </p>
-            <p> Now, pursued by the Empire&apos;s dreaded Linting Droids, a lone developer, ABHIJITH H, carries this stolen prompt. A master of the Transformer Arts and an Architect of Neural Nets, he is the galaxy&apos;s last hope to democratize intelligence. </p>
-            <p> He must now decode the prompt&apos;s secrets and use its power to build a new generation of open, intelligent systems, restoring balance to the digital frontier.... </p>
-          </div>
+            {/* CONTACT */}
+            <section className="contact" id="contact">
+              <div className="contact-floaters" aria-hidden="true"></div>
+              <p className="section-tag centered">04 / Contact</p>
+              <h2 className="contact-heading">
+                <span className="line">Got something</span>
+                <span className="line">worth bending</span>
+                <span className="line">light for?</span>
+              </h2>
+              <a className="btn-glass btn-big glass hoverable magnetic" href="mailto:abhijith@nuvae.ai">
+                <span>hello@abhijithh.dev</span>
+                <svg viewBox="0 0 24 24" width="22" height="22">
+                  <path d="M5 12h14m0 0l-6-6m6 6l-6 6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
+              <footer className="footer">
+                <div className="footer-content">
+                  <p>Abhijith H</p>
+                  <div className="social-links">
+                    <a href="https://linkedin.com/in/13x02" target="_blank" rel="noopener noreferrer" className="social-link hoverable">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z" />
+                      </svg>
+                      LinkedIn
+                    </a>
+                    <a href="https://github.com/13x02" target="_blank" rel="noopener noreferrer" className="social-link hoverable">
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                      </svg>
+                      GitHub
+                    </a>
+                  </div>
+                </div>
+                <p className="footer-hint">photosensitivity note: this site bends light, gently</p>
+              </footer>
+            </section>
+          </main>
         </div>
       </div>
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/50 text-center text-sm animate-pulse z-20">
-        Click anywhere to skip
-      </div>
-      <style jsx>{`
-        .crawl-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; perspective: 800px; }
-        .crawl { position: relative; top: 100%; transform-origin: 50% 100%; animation: crawl 35s linear forwards; color: #ffffff; font-family: monospace; font-weight: bold; text-align: justify; text-align-last: center; transform: rotateX(25deg); }
-        .title { margin-bottom: 80px; text-align: center; }
-        .title h1 { font-size: 4.5rem; margin-bottom: 30px; letter-spacing: 6px; }
-        .title h2 { font-size: 5rem; letter-spacing: 4px; margin-bottom: 50px; }
-        .text { max-width: 1400px; margin: 0 auto; font-size: 2.8rem; line-height: 1.6; letter-spacing: 2px; }
-        .text p { margin-bottom: 40px; }
-        @keyframes crawl { 0% { top: 100%; transform: rotateX(25deg) translateZ(0); } 100% { top: -180%; transform: rotateX(25deg) translateZ(-3500px); } }
-        .stars { width: 1px; height: 1px; background: transparent; box-shadow: 1780px 1216px #fff, 1819px 1595px #fff, 1699px 1799px #fff, 1207px 1699px #fff, 1699px 1207px #fff, 1819px 1216px #fff, 1780px 1595px #fff, 1207px 1799px #fff; animation: animStar 50s linear infinite; }
-        .stars2 { width: 2px; height: 2px; background: transparent; box-shadow: 700px 400px #fff, 900px 600px #fff, 1100px 800px #fff, 1300px 200px #fff, 1500px 1000px #fff, 200px 300px #fff, 400px 500px #fff, 600px 700px #fff; animation: animStar 100s linear infinite; }
-        .stars3 { width: 3px; height: 3px; background: transparent; box-shadow: 800px 500px #fff, 1000px 300px #fff, 1200px 700px #fff, 1400px 900px #fff, 300px 400px #fff, 500px 600px #fff, 700px 200px #fff, 900px 800px #fff; animation: animStar 150s linear infinite; }
-        @keyframes animStar { from { transform: translateY(0px); } to { transform: translateY(-2000px); } }
-      `}</style>
-    </div>
-  )
-}
-
-function ExperienceItem({ year, title, company, description, skills }: { year: string; title: string; company: string; description: string; skills: string[] }) {
- 
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
-  }
-  return (
-    <motion.div variants={itemVariants} className="relative pl-16 md:pl-20">
-      <div className="absolute left-6 top-2 w-4 h-4 bg-black dark:bg-white rounded-full border-4 border-white dark:border-black shadow-lg hidden md:block"></div>
-      <div className="mb-2"><span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{year}</span></div>
-      <h3 className="text-2xl font-medium mb-1">{title}</h3>
-      <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">{company}</p>
-      <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">{description}</p>
-      <div className="flex flex-wrap gap-2">
-        {skills.map((skill, index) => (<Badge key={index} variant="secondary" className="text-xs dark:bg-zinc-700 dark:text-zinc-200">{skill}</Badge>))}
-      </div>
-    </motion.div>
-  )
-}
-
-function ProjectCard({ title, description, tech, status }: { title: string; description: string; tech: string[]; status: string }) {
-  const statusColors = { Live: "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200", Production: "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200", Research: "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200", Beta: "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200" };
-
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
-  }
-  return (
-    <motion.div variants={itemVariants}>
-      <Card className="h-full hover:shadow-xl dark:hover:shadow-white/10 transition-all duration-300 bg-white dark:bg-zinc-800/50 dark:border-zinc-700 hover:-translate-y-2">
-        <CardHeader>
-          <div className="flex items-start justify-between mb-2">
-            <CardTitle className="text-xl font-medium">{title}</CardTitle>
-            <Badge className={`${statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800"} border border-transparent`}>{status}</Badge>
-          </div> 
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">{description}</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {tech.map((item, index) => (<Badge key={index} variant="outline" className="text-xs dark:border-gray-600">{item}</Badge>))}
-          </div>
-          <Button variant="ghost" size="sm" className="p-0 h-auto text-black dark:text-white hover:text-gray-600 dark:hover:text-gray-400">
-            <ExternalLink className="w-4 h-4 mr-2" />
-            View Project
-          </Button>
-        </CardContent>
-      </Card>
-    </motion.div>
-  )
+    </>
+  );
 }
