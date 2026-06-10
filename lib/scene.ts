@@ -109,7 +109,7 @@ export function initScene(canvas: HTMLCanvasElement) {
     ior: 1.5,
   });
 
-  const shapes: any[] = [];
+  const shapes: THREE.Mesh[] = [];
 
   // Main shapes (boxes, dodecs, etc)
   const geos = [
@@ -120,7 +120,7 @@ export function initScene(canvas: HTMLCanvasElement) {
     new THREE.TetrahedronGeometry(0.8),
   ];
 
-  geos.forEach((geo, i) => {
+  geos.forEach((geo) => {
     const mesh = new THREE.Mesh(geo, glassMat);
     mesh.position.set(rand(-5, 5), rand(-3, 3), rand(-1, 3));
     mesh.rotation.set(rand(0, Math.PI), rand(0, Math.PI), rand(0, Math.PI));

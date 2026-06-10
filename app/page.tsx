@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger, ScrollSmoother, SplitText, DrawSVGPlugin } from 'gsap/all';
 import { initScene } from '@/lib/scene';
@@ -302,6 +302,7 @@ export default function Home() {
 
     return () => {
       // Cleanup
+      smoother.kill();
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, []);
@@ -368,7 +369,7 @@ export default function Home() {
             </a>
           </div>
           <a className="nav-cta hoverable" href="#contact">
-            Let's talk
+            Let&apos;s talk
           </a>
         </nav>
       </header>
@@ -471,7 +472,7 @@ export default function Home() {
                       0
                     </span>
                     <span className="stat-suffix">fps</span>
-                    <p>or we don't ship</p>
+                    <p>or we don&apos;t ship</p>
                   </div>
                 </div>
               </div>
@@ -481,7 +482,7 @@ export default function Home() {
             <section className="work" id="work">
               <div className="work-header">
                 <p className="section-tag">02 / Selected work</p>
-                <h2 className="work-heading">Things I've worked on recently</h2>
+                <h2 className="work-heading">Things I&apos;ve worked on recently</h2>
               </div>
               <div className="work-track">
                 <article className="project glass hoverable" data-hue="195">
@@ -542,7 +543,7 @@ export default function Home() {
                 </article>
                 <div className="work-endcap">
                   <p>
-                    that's it
+                    that&apos;s it
                     <br />
                     (for now)
                   </p>
@@ -556,22 +557,22 @@ export default function Home() {
               <h2 className="process-heading">Work & Impact</h2>
 
               <div className="process-body">
-                <div className="step glass reveal" style={{ '--step-y': '12%', '--step-side': 'flex-end' } as any}>
+                <div className="step glass reveal" style={{ '--step-y': '12%', '--step-side': 'flex-end' } as CSSProperties}>
                   <span className="step-no">2025 - Now</span>
                   <h3>Product Engineer @ nuvae</h3>
                   <p>Building intelligent healthcare agent systems and LLM-powered applications. Specializing in RAG pipelines, multi-agent orchestration, and production AI infrastructure.</p>
                 </div>
-                <div className="step glass reveal" style={{ '--step-y': '31%', '--step-side': 'flex-start' } as any}>
+                <div className="step glass reveal" style={{ '--step-y': '31%', '--step-side': 'flex-start' } as CSSProperties}>
                   <span className="step-no">2024 - 2025</span>
                   <h3>Developer - I @ UST </h3>
                   <p>Developed Gen AI powered POC for multiple use cases.Leveraged large language models to enhance user experience and streamline workflows.</p>
                 </div>
-                <div className="step glass reveal" style={{ '--step-y': '50%', '--step-side': 'flex-end' } as any}>
+                <div className="step glass reveal" style={{ '--step-y': '50%', '--step-side': 'flex-end' } as CSSProperties}>
                   <span className="step-no">2024 - 2024</span>
                   <h3>Software Engineer Trainee @ UST </h3>
                   <p>Trained in software development principles and practices. Gained hands-on experience with various programming languages and frameworks.</p>
                 </div>
-                <div className="step glass reveal" style={{ '--step-y': '69%', '--step-side': 'flex-start' } as any}>
+                <div className="step glass reveal" style={{ '--step-y': '69%', '--step-side': 'flex-start' } as CSSProperties}>
                   <span className="step-no">2023 - 2024</span>
                   <h3>Frontend Developer Intern @ IHRD</h3>
                   <p>Started journey with JavaScript and web fundamentals. Contributed to IHRD-KP joint projects.</p>
